@@ -1,7 +1,6 @@
 use crate::config::AppConfig;
 use once_cell::sync::Lazy;
 use std::time::Duration;
-use tracing::debug;
 use tracing::info;
 
 pub fn create_client(config: &AppConfig) -> reqwest::Client {

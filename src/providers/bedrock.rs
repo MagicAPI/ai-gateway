@@ -9,7 +9,6 @@ use axum::{
 use futures_util::StreamExt;
 use parking_lot::RwLock;
 use serde_json::{json, Value};
-use std::io::Read;
 use std::sync::Arc;
 use tracing::{debug, error, warn};
 
@@ -184,7 +183,7 @@ impl BedrockProvider {
             "id": "chatcmpl-bedrock",
             "object": "chat.completion.chunk",
             "created": chrono::Utc::now().timestamp(),
-            "model": "bedrock",
+            "model": self.current_model.read().as_str(),
             "choices": [{
                 "index": 0,
                 "delta": {
@@ -200,7 +199,7 @@ impl BedrockProvider {
             "id": "chatcmpl-bedrock",
             "object": "chat.completion.chunk",
             "created": chrono::Utc::now().timestamp(),
-            "model": "bedrock",
+            "model": self.current_model.read().as_str(),
             "choices": [{
                 "index": 0,
                 "delta": {},

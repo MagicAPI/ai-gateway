@@ -5,11 +5,6 @@ The Anthropic provider integrates with Claude models through Anthropic's API, wi
 
 ## Configuration
 
-### Environment Variables
-```bash
-ANTHROPIC_API_KEY=sk-ant-...
-```
-
 ### Headers
 ```bash
 Authorization: Bearer sk-ant-...
@@ -136,6 +131,13 @@ client = Anthropic(
 2. **Model Availability**
    - Not all Claude models may be available
    - Check Anthropic's documentation for current model list
+
+Note: When using Anthropic as the provider, the gateway 
+automatically:
+- Routes requests to Anthropic's message API
+- Converts the Authorization Bearer token to the required 
+x-api-key format
+- Adds the required anthropic-version header
 
 ## Additional Resources
 

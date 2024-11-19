@@ -8,12 +8,7 @@ Refer to the provider implementation in `src/providers/together.rs`.
 
 ## Configuration
 
-### Environment Variables
-```bash
-TOGETHER_API_KEY=tok_...
-```
-
-### Headers
+### Request Headers
 ```bash
 Authorization: Bearer tok_...
 x-provider: together

@@ -5,13 +5,6 @@ The AWS Bedrock provider enables seamless access to AWS's AI models through an O
 
 ## Configuration
 
-### Environment Variables
-```bash
-AWS_ACCESS_KEY_ID=your_access_key
-AWS_SECRET_ACCESS_KEY=your_secret_key
-AWS_REGION=us-east-1  # Optional, defaults to us-east-1
-```
-
 ### Headers
 ```bash
 x-aws-access-key-id: your_access_key

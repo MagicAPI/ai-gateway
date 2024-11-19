@@ -126,10 +126,6 @@ impl IntoResponse for AppError {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 format!("UTF-8 conversion error: {}", e),
             ),
-            AppError::IoError(e) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("IO error: {}", e),
-            ),
         };
 
         let body = Json(json!({

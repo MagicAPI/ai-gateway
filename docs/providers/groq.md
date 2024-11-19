@@ -25,10 +25,10 @@ GROQ provider support in MagicAPI AI Gateway enables high-performance access to 
 
 ## Configuration
 
-### Environment Variables
+### Request Headers
 ```bash
-# In your .env file
-GROQ_API_KEY=gsk_...
+Authorization: Bearer $GROQ_API_KEY
+x-provider: groq
 ```
 
 ## API Examples

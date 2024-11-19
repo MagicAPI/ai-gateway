@@ -16,13 +16,7 @@ The OpenAI provider supports a diverse set of models with different capabilities
 
 ## Configuration
 
-### Environment Variables
-```bash
-OPENAI_API_KEY=sk-...
-OPENAI_ORG_ID=org-... # Optional
-```
-
-### Headers
+### Request Headers
 ```bash
 Authorization: Bearer sk-...
 x-provider: openai

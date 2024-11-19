@@ -2,15 +2,6 @@
 
 ## Configuration
 
-### Environment Variables
-```bash
-# Required
-FIREWORKS_API_KEY=fw-...
-
-# Optional
-FIREWORKS_BASE_URL=https://api.fireworks.ai/inference/v1
-```
-
 ### Request Headers
 ```bash
 Authorization: Bearer $FIREWORKS_API_KEY

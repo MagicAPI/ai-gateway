@@ -4,11 +4,10 @@ use axum::{
     body::{Body, Bytes},
     http::{HeaderMap, HeaderValue, Request, Response, StatusCode},
 };
-use bytes::BytesMut;
 use futures_util::StreamExt;
 use reqwest::Method;
 use std::sync::Arc;
-use tracing::{debug, error, info};
+use tracing::{debug, error};
 
 use crate::{config::AppConfig, error::AppError, providers::create_provider};
 
@@ -35,7 +34,7 @@ pub async fn proxy_request_to_provider(
         .await?;
 
     // Process headers and transform path
-    let mut headers = provider.process_headers(original_request.headers())?;
+    let headers = provider.process_headers(original_request.headers())?;
     let path = original_request.uri().path();
     let modified_path = provider.transform_path(path);
 
@@ -57,7 +56,6 @@ pub async fn proxy_request_to_provider(
             signing::sign_aws_request(
                 original_request.method().as_str(),
                 &url,
-                &headers,
                 &prepared_body,
                 &access_key,
                 &secret_key,

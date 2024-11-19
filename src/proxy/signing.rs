@@ -9,7 +9,6 @@ use tracing::debug;
 pub async fn sign_aws_request(
     method: &str,
     url: &str,
-    headers: &HeaderMap,
     body: &[u8],
     access_key: &str,
     secret_key: &str,
