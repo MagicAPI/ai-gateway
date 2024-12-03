@@ -1,6 +1,9 @@
 use axum::{
+    middleware::from_fn_with_state,
     routing::{any, get},
     Router,
+    extract::connect_info::ConnectInfo,
+    Extension,
 };
 use std::sync::Arc;
 use std::time::Duration;
@@ -14,8 +17,17 @@ mod error;
 mod handlers;
 mod providers;
 mod proxy;
+mod telemetry;
 
-use crate::config::AppConfig;
+use crate::{
+    config::{AppConfig, TelemetryConfig},
+    telemetry::{
+        exporters::prometheus::PrometheusExporter,
+        metrics::MetricsRegistry,
+        middleware::{self, metrics_middleware},
+        plugins::ConsolePlugin,
+    },
+};
 
 #[tokio::main]
 async fn main() {
@@ -32,8 +44,8 @@ async fn main() {
     info!("Loading application configuration");
     let config = Arc::new(AppConfig::new());
     debug!(
-        "Configuration loaded: port={}, host={}",
-        config.port, config.host
+        "Configuration loaded: port={}, host={}, worker_threads={}",
+        config.port, config.host, config.worker_threads
     );
 
     // Optimize tokio runtime
@@ -52,13 +64,39 @@ async fn main() {
         .allow_headers(Any)
         .max_age(Duration::from_secs(3600));
 
+    let telemetry_config = TelemetryConfig::default();
+    debug!(
+        "Telemetry configuration: prometheus_enabled={}, debug_mode={}",
+        telemetry_config.prometheus_enabled, telemetry_config.debug_mode
+    );
+    let metrics_registry = Arc::new(MetricsRegistry::new(telemetry_config.debug_mode));
+
+    // Register exporters based on configuration
+    if telemetry_config.prometheus_enabled {
+        debug!("Registering Prometheus exporter");
+        metrics_registry
+            .register_exporter(Box::new(PrometheusExporter::new("ai_gateway".to_string())))
+            .await;
+    }
+
+    if telemetry_config.debug_mode {
+        debug!("Registering Console plugin for metrics");
+        metrics_registry
+            .register_exporter(Box::new(ConsolePlugin::new()))
+            .await;
+    }
+
     // Create router with optimized settings
+    debug!("Creating application router");
     let app = Router::new()
         .route("/health", get(handlers::health_check))
         .route("/v1/*path", any(handlers::proxy_request))
+        .layer(from_fn_with_state(
+            metrics_registry.clone(),
+            metrics_middleware,
+        ))
         .with_state(config.clone())
-        .layer(cors)
-        .into_make_service_with_connect_info::<std::net::SocketAddr>();
+        .layer(cors);
 
     // Start server with optimized TCP settings
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], config.port));
@@ -77,13 +115,17 @@ async fn main() {
         config.host, config.port, config.worker_threads
     );
 
-    axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal())
-        .await
-        .unwrap_or_else(|e| {
-            error!("Server error: {}", e);
-            std::process::exit(1);
-        });
+    debug!("Starting server with graceful shutdown");
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown_signal())
+    .await
+    .unwrap_or_else(|e| {
+        error!("Server error: {}", e);
+        std::process::exit(1);
+    });
 }
 
 async fn shutdown_signal() {
@@ -102,8 +144,12 @@ async fn shutdown_signal() {
     };
 
     tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
+        _ = ctrl_c => {
+            debug!("CTRL+C signal received");
+        },
+        _ = terminate => {
+            debug!("Terminate signal received");
+        },
     }
     info!("Shutdown signal received, starting graceful shutdown");
 }

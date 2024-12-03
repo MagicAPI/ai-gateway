@@ -69,3 +69,30 @@ impl AppConfig {
         config
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct TelemetryConfig {
+    pub debug_mode: bool,
+    pub prometheus_enabled: bool,
+    pub elasticsearch_enabled: bool,
+    pub cloudwatch_enabled: bool,
+}
+
+impl Default for TelemetryConfig {
+    fn default() -> Self {
+        Self {
+            debug_mode: std::env::var("DEBUG_METRICS")
+                .map(|v| v.parse().unwrap_or(false))
+                .unwrap_or(false),
+            prometheus_enabled: std::env::var("ENABLE_PROMETHEUS")
+                .map(|v| v.parse().unwrap_or(false))
+                .unwrap_or(false),
+            elasticsearch_enabled: std::env::var("ENABLE_ELASTICSEARCH")
+                .map(|v| v.parse().unwrap_or(false))
+                .unwrap_or(false),
+            cloudwatch_enabled: std::env::var("ENABLE_CLOUDWATCH")
+                .map(|v| v.parse().unwrap_or(false))
+                .unwrap_or(false),
+        }
+    }
+}
