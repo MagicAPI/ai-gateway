@@ -18,27 +18,38 @@ pub async fn health_check() -> impl IntoResponse {
 pub async fn proxy_request(
     State(config): State<Arc<AppConfig>>,
     headers: HeaderMap,
-    ConnectInfo(addr): ConnectInfo<SocketAddr>,
-    request: Request<Body>,
+    connect_info: Option<ConnectInfo<SocketAddr>>,
+    mut request: Request<Body>,
 ) -> impl IntoResponse {
     let provider = headers
         .get("x-provider")
         .and_then(|h| h.to_str().ok())
         .unwrap_or("openai");
 
-    debug!(
-        "Received request for provider: {}, client: {}, path: {}",
-        provider,
-        addr,
+    let client_addr = connect_info
+        .map(|ConnectInfo(addr)| addr.to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    let path = if request.uri().path() == "/v1/chat/completions" {
+        "/v1/chat/completions"
+    } else {
         request.uri().path()
+    };
+
+    debug!(
+        "Received request for provider: {}, client: {}, path: {}, method: {}",
+        provider,
+        client_addr,
+        path,
+        request.method()
     );
 
     let span = tracing::info_span!(
         "proxy_request",
         provider = provider,
         method = %request.method(),
-        path = %request.uri().path(),
-        client = %addr
+        path = %path,
+        client = %client_addr
     );
 
     async move {
